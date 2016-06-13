@@ -1,4 +1,4 @@
-# betterchatfilter
+# Better Chat Filter
 Tos Addon that prevents your messages from being deleted due to chat filter.
 
 ![Example image of betterchatfilter working](http://i.imgur.com/whXZrGK.png)
