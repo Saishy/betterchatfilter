@@ -1,0 +1,15 @@
+[
+  {
+    "name" : "Better Chat Filter",
+    "file" : "betterchatfilter",
+    "extension" : "ipf",
+    "fileVersion" : "v0.0.2",
+    "releaseTag" : "tosaddons",
+    "unicode" : "🐦",
+    "description" : "Exchanges some letters of common words to * so you don't lose the whole phrase when trying to send messages ingame.",
+    "tags" : [
+      "chat",
+      "ui"
+    ]
+  }
+]
