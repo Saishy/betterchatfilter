@@ -38,7 +38,7 @@ function BETTERCHATFILTER_3SEC()
 	end
 	ui.Chat = BETTERCHATFILTER.uiChat;
 
-	mainchat:SetTypingScp("BETTERCHATFILTER_TYPING_IN_CHAT");
+	--mainchat:SetTypingScp("BETTERCHATFILTER_TYPING_IN_CHAT");
 end
 
 function BETTERCHATFILTER.uiChat(txt)
