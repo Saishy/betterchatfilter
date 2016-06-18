@@ -1,3 +1,5 @@
+-- Credits: Saishy, Mie
+
 BETTERCHATFILTER = _G["BETTERCHATFILTER"] or {};
 BETTERCHATFILTER.censorChar = '*';
 
