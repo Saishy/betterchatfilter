@@ -1,7 +1,20 @@
-if _G["ADDONS"] == nil then _G["ADDONS"] = {}; end
+BETTERCHATFILTER = _G["BETTERCHATFILTER"] or {};
+BETTERCHATFILTER.censorChar = '*';
 
-_G["ADDONS"]["BETTERCHATFILTER"] = {};
-BETTERCHATFILTER = _G["ADDONS"]["BETTERCHATFILTER"];
+BETTERCHATFILTER.escapeMatches = {
+	["^"] = "%^";
+	["$"] = "%$";
+	["("] = "%(";
+	[")"] = "%)";
+	["%"] = "%%";
+	["."] = "%.";
+	["["] = "%[";
+	["]"] = "%]";
+	["*"] = "%*";
+	["+"] = "%+";
+	["-"] = "%-";
+	["?"] = "%?";
+};
 
 function BETTERCHATFILTER_ON_INIT(addon, frame)
 	BETTERCHATFILTER.addon = addon;
@@ -16,18 +29,28 @@ function BETTERCHATFILTER_ON_INIT(addon, frame)
 	addon:RegisterMsg("GAME_START_3SEC", "BETTERCHATFILTER_3SEC");
 end
 
-
 function BETTERCHATFILTER_3SEC()
 	local chatframe = ui.GetFrame("chat");
 	local mainchat = GET_CHILD(chatframe, "mainchat", "ui::CEditControl");
-	
+
+	if not BETTERCHATFILTER_uiChat_OLD then
+		BETTERCHATFILTER_uiChat_OLD = ui.Chat;
+	end
+	ui.Chat = BETTERCHATFILTER.uiChat;
+
 	mainchat:SetTypingScp("BETTERCHATFILTER_TYPING_IN_CHAT");
 end
 
+function BETTERCHATFILTER.uiChat(txt)
+	BETTERCHATFILTER_uiChat_OLD(BETTERCHATFILTER_FILTER(txt));
+end
+
 function BETTERCHATFILTER_TYPING_IN_CHAT(parent, ctrl)	
-	BETTERCHATFILTER_SEARCH_FOR_FILTERED_WORDS();
-	--parent:CancelReserveScript("BETTERCHATFILTER_SEARCH_FOR_FILTERED_WORDS");
-	--parent:ReserveScript("BETTERCHATFILTER_SEARCH_FOR_FILTERED_WORDS", 0.1, 1);
+	--BETTERCHATFILTER_SEARCH_FOR_FILTERED_WORDS();
+
+	-- precautionary delay
+	parent:CancelReserveScript("BETTERCHATFILTER_SEARCH_FOR_FILTERED_WORDS");
+	parent:ReserveScript("BETTERCHATFILTER_SEARCH_FOR_FILTERED_WORDS", 0.1, 1);
 end
 
 function BETTERCHATFILTER_SEARCH_FOR_FILTERED_WORDS()
@@ -35,21 +58,29 @@ function BETTERCHATFILTER_SEARCH_FOR_FILTERED_WORDS()
 	local mainchat = GET_CHILD(chatframe, "mainchat", "ui::CEditControl");
 	
 	local chattext = mainchat:GetText();
-	local badword = IsBadString(chattext);
-	
-	if badword ~= nil then
-		badword = badword:sub(1,9); -- limit to 9 characters because of pattern referencing limits ( %1-9 )
-
-		local escaped = BETTERCHATFILTER.patternEscape(badword);
-		local capture = BETTERCHATFILTER.caseInsensitiveCapture(escaped);
-		local goodword = BETTERCHATFILTER.getGood(badword);
-
-		chattext = chattext:gsub(capture, goodword)
-		mainchat:SetText(chattext);
-	end
+	local filteredtxt = BETTERCHATFILTER_FILTER(chattext);
+	if filteredtxt ~= chattext then
+		mainchat:SetText(filteredtxt);
+	end	
 end
 
-BETTERCHATFILTER.censorChar = '*';
+function BETTERCHATFILTER_FILTER(txt)
+	local badword;
+	repeat
+		badword = IsBadString(txt);
+		if badword ~= nil then
+			badword = badword:sub(1,9); -- limit to 9 characters because of pattern referencing limits ( %1-9 )
+
+			local escaped = BETTERCHATFILTER.patternEscape(badword);
+			local capture = BETTERCHATFILTER.caseInsensitiveCapture(escaped);
+			local goodword = BETTERCHATFILTER.getGood(badword);
+
+			txt = txt:gsub(capture, goodword)
+		end
+	until badword == nil
+
+	return txt;
+end
 
 function BETTERCHATFILTER.getGood(str)
 	local _str = BETTERCHATFILTER.patternEscape(str);
@@ -97,22 +128,6 @@ function BETTERCHATFILTER.caseInsensitiveCapture(pattern)
 	end)
 	return p:gsub("(%[.-])", "(%1)")
 end
-
-BETTERCHATFILTER.escapeMatches =
-{
-	["^"] = "%^";
-	["$"] = "%$";
-	["("] = "%(";
-	[")"] = "%)";
-	["%"] = "%%";
-	["."] = "%.";
-	["["] = "%[";
-	["]"] = "%]";
-	["*"] = "%*";
-	["+"] = "%+";
-	["-"] = "%-";
-	["?"] = "%?";
-}
 
 function BETTERCHATFILTER.patternEscape(s)
 	return (s:gsub(".", BETTERCHATFILTER.escapeMatches))
